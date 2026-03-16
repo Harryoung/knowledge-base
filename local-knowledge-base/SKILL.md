@@ -83,7 +83,10 @@ Actions:
 
 - 对 DOCX / DOC / PDF / PPTX / PPT 使用 `scripts/smart_convert.py`
 - 对 Excel 先使用 `scripts/complexity_analyzer.py` 判断路由
-- 扫描版 PDF 若返回 `needs_ocr: true`，优先调用 OCR Skill；若环境中没有 OCR Skill，明确告诉用户这是阻塞点
+- 扫描版 PDF 若返回 `needs_ocr: true`，明确依赖 `https://clawhub.ai/Bobholamovic/paddleocr-doc-parsing` 这个 Skill 处理 OCR，不要用模糊的“任意 OCR Skill”表述替代
+- 如果用户尚未安装 `paddleocr-doc-parsing`，明确告知这是当前扫描版 PDF 收录的阻塞依赖
+- 告知用户：`paddleocr-doc-parsing` 所需的免费 API 令牌可以在 `https://aistudio.baidu.com/account/accessToken` 获取；如果还没有 AI Studio 账户，需要先注册
+- 告知用户：该 API 令牌对应的每日免费额度通常足够个人日常使用；若个人使用频率明显超出免费额度，再考虑自托管或替代部署
 - 冲突检测必须按语义进行，不能只看文件名
 - 更新 `README.md` 时，优先维护导航质量
 

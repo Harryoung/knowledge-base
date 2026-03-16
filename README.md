@@ -87,7 +87,7 @@ The Skill handles format conversion, conflict detection, index maintenance, and 
 | DOCX | Pandoc | Full structure preservation |
 | DOC | LibreOffice → Pandoc | Converts to DOCX first |
 | PDF (digital) | PyMuPDF4LLM | Fast, high-fidelity extraction |
-| PDF (scanned) | Detected → OCR routing | Returns `needs_ocr: true` instead of garbage |
+| PDF (scanned) | Detected → `paddleocr-doc-parsing` OCR routing | Returns `needs_ocr: true`; OCR depends on `https://clawhub.ai/Bobholamovic/paddleocr-doc-parsing` |
 | PPTX | pptx2md | Preserves slide structure and speaker notes |
 | PPT | LibreOffice → pptx2md | Converts to PPTX first |
 | Excel | Complexity analyzer | Routes to Pandas (simple) or HTML semantic mode (complex) |
@@ -117,7 +117,7 @@ This means packaging is trivial — just archive `local-knowledge-base/` and you
 
 A few choices that set this project apart:
 
-- **Scanned PDF honesty.** Instead of silently producing empty or garbled Markdown, scanned PDFs are detected and explicitly flagged. The agent knows to route them to OCR rather than pretending the conversion worked.
+- **Scanned PDF honesty.** Instead of silently producing empty or garbled Markdown, scanned PDFs are detected and explicitly flagged. In this project, OCR for scanned PDFs explicitly depends on `https://clawhub.ai/Bobholamovic/paddleocr-doc-parsing` rather than an unspecified OCR tool.
 
 - **Excel complexity routing.** Not all spreadsheets are equal. A 10,000-row data table and a financial report with merged cells need completely different parsing strategies. The complexity analyzer decides before processing begins.
 

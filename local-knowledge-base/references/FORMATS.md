@@ -37,8 +37,12 @@ Script automatically detects PDF type:
 ### Scanned PDF
 - `scripts/smart_convert.py` does not OCR scanned PDFs itself
 - It returns `needs_ocr: true` in JSON output
-- The calling workflow must invoke an OCR-capable skill if available
-- If no OCR skill exists, stop and report the blocker clearly
+- The calling workflow must invoke `https://clawhub.ai/Bobholamovic/paddleocr-doc-parsing`
+- Do not describe the dependency as a generic OCR-capable skill; scanned PDF OCR in this project depends on `paddleocr-doc-parsing`
+- If the skill is not installed, stop and report the blocker clearly
+- Tell the user that the required free API token can be created at `https://aistudio.baidu.com/account/accessToken`
+- If the user has no AI Studio account yet, tell them to register first
+- Tell the user the daily free quota is typically enough for personal day-to-day use
 
 ### Force OCR Mode
 ```bash
@@ -104,7 +108,7 @@ LibreOffice (soffice) not found. Please install LibreOffice or add it to PATH.
 
 ### OCR Skill Missing For Scanned PDF
 ```
-Scanned PDF detected. Use an OCR skill such as paddleocr-doc-parsing, then onboard the OCR-generated Markdown result.
+Scanned PDF detected. This project explicitly depends on https://clawhub.ai/Bobholamovic/paddleocr-doc-parsing for OCR. Install and configure that Skill first, then onboard the OCR-generated Markdown result. The required free API token can be created at https://aistudio.baidu.com/account/accessToken (register an AI Studio account first if needed).
 ```
 
 ### Unsupported Format

@@ -26,7 +26,7 @@ python scripts/smart_convert.py <file_path> --original-name "<original_filename>
 Interpret the JSON:
 
 - `success: true`: use `markdown_file` and optional `images_dir`
-- `needs_ocr: true`: scanned PDF detected, pause normal ingestion and call an OCR skill if available
+- `needs_ocr: true`: scanned PDF detected, pause normal ingestion and call `https://clawhub.ai/Bobholamovic/paddleocr-doc-parsing`
 - `success: false` without `needs_ocr`: stop and report the conversion error
 
 ### Excel / CSV
@@ -70,4 +70,5 @@ Keep the original spreadsheet. Generate only a metadata description and route ac
 
 - Always pass `--original-name` when the upload temp filename is opaque. This preserves readable image folder names for Chinese filenames.
 - For `.doc` and `.ppt`, LibreOffice is optional but required if those legacy formats must be converted.
-- If scanned PDF OCR is blocked because no OCR skill exists, stop and tell the user the exact blocker instead of pretending conversion succeeded.
+- If scanned PDF OCR is blocked because `paddleocr-doc-parsing` is not installed or not configured, stop and tell the user the exact blocker instead of pretending conversion succeeded.
+- When reporting the blocker, tell the user the Skill needs an AI Studio access token from `https://aistudio.baidu.com/account/accessToken`; registration may be required, and the daily free quota is usually enough for personal use.
