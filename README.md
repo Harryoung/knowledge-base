@@ -4,6 +4,8 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
 
+Chinese README: [README.zh-CN.md](./README.zh-CN.md)
+
 Local-first knowledge base tooling for developers who want to turn messy office documents into structured Markdown and build a reusable Q&A workflow on top.
 
 This repository is useful if you want to:
@@ -126,6 +128,7 @@ knowledge-base/
 ├── tests/
 ├── SKILL.md
 ├── README.md
+├── README.zh-CN.md
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── LICENSE
@@ -142,6 +145,67 @@ python -m unittest discover -s tests -v
 ```
 
 CI runs the same checks on Python `3.10`, `3.11`, and `3.12`.
+
+## Package for Distribution
+
+If you want a clean distributable archive without adding packaging logic to `scripts/`, run the following from the repository root. It creates both `dist/knowledge-base-skill.zip` and `dist/knowledge-base-skill.skill`.
+
+`.skill` is just a zip archive with a different extension so downstream tools can treat it as a skill bundle.
+
+```bash
+python - <<'PY'
+from pathlib import Path
+import shutil
+import zipfile
+
+root = Path.cwd().resolve()
+dist = root / "dist"
+dist.mkdir(exist_ok=True)
+
+package_name = "knowledge-base-skill"
+include = [
+    "SKILL.md",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "NOTICE",
+    "pyproject.toml",
+    "requirements.txt",
+    "requirements-dev.txt",
+    "assets",
+    "references",
+    "scripts",
+]
+
+zip_path = dist / f"{package_name}.zip"
+skill_path = dist / f"{package_name}.skill"
+
+with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    for item in include:
+        path = root / item
+        if path.is_dir():
+            for child in sorted(path.rglob("*")):
+                if child.is_file() and "__pycache__" not in child.parts:
+                    arcname = Path(package_name) / child.relative_to(root)
+                    zf.write(child, arcname)
+        elif path.is_file():
+            arcname = Path(package_name) / path.relative_to(root)
+            zf.write(path, arcname)
+
+shutil.copyfile(zip_path, skill_path)
+
+print(f"Created: {zip_path}")
+print(f"Created: {skill_path}")
+PY
+```
+
+This packaging approach is intentionally narrow:
+
+- it includes the runtime scripts and skill metadata
+- it excludes `.git`, `.github`, test artifacts, caches, and local virtual environments
+- it keeps packaging logic out of the skill's actual runtime directory structure
 
 ## Limits and Non-Goals
 
