@@ -4,9 +4,9 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
 
-Chinese README: [README.zh-CN.md](./README.zh-CN.md)
+English | [简体中文](./README.zh-CN.md)
 
-Local-first knowledge base tooling for developers who want to turn messy office documents into structured Markdown and build a reusable Q&A workflow on top.
+Local-first knowledge-base tooling for developers, operators, and office users who want to turn messy documents into structured Markdown and use that knowledge through Skill-enabled agent software.
 
 This repository is useful if you want to:
 
@@ -14,6 +14,7 @@ This repository is useful if you want to:
 - route Excel files before ingestion instead of blindly parsing every spreadsheet the same way
 - bootstrap a local knowledge base with `README`, `FAQ`, and `BADCASE` conventions
 - fork a small, auditable document-ingestion layer instead of extracting it yourself from a larger agent project
+- ship the capability as an installable Skill instead of teaching each user a manual workflow
 
 ## Why This Repo Exists
 
@@ -26,7 +27,7 @@ Most internal knowledge bases fail for boring reasons: the source files are inco
 - local knowledge-base initialization and migration
 - retrieval discipline based on FAQ, README navigation, source reading, and BADCASE feedback
 
-It is intentionally small. That makes it easier to fork, inspect, and adapt to your own agent or document workflow.
+It is intentionally small. That makes it easier to install, fork, inspect, and adapt to your own agent or document workflow.
 
 ## What You Get
 
@@ -58,36 +59,21 @@ This is enough structure to be useful without dragging in a full platform.
 
 ## Quick Start
 
-### Requirements
+### Option 1. Install as a Local Skill Folder
 
-- Python `3.10+`
-- internet access on first run so Pandoc can be installed automatically when missing
-- LibreOffice if you need `.doc` or `.ppt` support
+This is the cleanest path for coding agents and general agents that support local skills, such as Claude Code, Codex, OpenClaw, or similar clients.
 
-### Install Runtime Dependencies
+1. Clone or download this repository.
+2. Copy the skill contents into your local skills directory, or add the repository as a local skill source if your client supports that.
+3. Ask the agent to install or use the `knowledge-base` skill.
 
-```bash
-python scripts/ensure_deps.py
-```
+The runtime setup is handled by the skill workflow itself when it is actually used.
 
-### Initialize a Knowledge Base
+### Option 2. Import a Packaged Skill Bundle
 
-```bash
-python scripts/kb_config.py --set ~/my-kb
-python scripts/kb_init.py ~/my-kb
-```
+If your client supports importing a bundle, create a `.zip` or `.skill` package and import it through the client's Skill UI.
 
-### Convert a Document
-
-```bash
-python scripts/smart_convert.py ./example.pdf --json-output
-```
-
-### Analyze an Excel File
-
-```bash
-python scripts/complexity_analyzer.py ./report.xlsx
-```
+The bundle should contain only the files the skill actually needs at runtime, not repository-only documentation.
 
 ## Example Workflows
 
@@ -109,10 +95,11 @@ python scripts/smart_convert.py ./deck.pptx --json-output
 
 The operational workflow for agent usage lives in [SKILL.md](./SKILL.md). Use that file if you want the exact decision rules for ingestion, Q&A, migration, FAQ maintenance, and BADCASE updates.
 
-## Why Developers Fork It
+## Why People Use or Fork It
 
 - You want the ingestion layer without inheriting an entire agent framework.
 - You need a reference implementation for office-document to Markdown conversion.
+- You want office users to install the capability through a Skill-enabled client instead of learning internal scripts.
 - You want a local-first KB workflow that is simple enough to modify in an afternoon.
 - You prefer explicit failure on scanned PDFs over silent garbage output.
 - You want tests, CI, and an Apache-2.0 license before building on top of it.
@@ -148,51 +135,60 @@ CI runs the same checks on Python `3.10`, `3.11`, and `3.12`.
 
 ## Package for Distribution
 
-If you want a clean distributable archive without adding packaging logic to `scripts/`, run the following from the repository root. It creates both `dist/knowledge-base-skill.zip` and `dist/knowledge-base-skill.skill`.
+According to the skill packaging model, the distributable bundle should contain the skill itself and only the files required by that skill at runtime.
 
-`.skill` is just a zip archive with a different extension so downstream tools can treat it as a skill bundle.
+That means:
+
+- include `SKILL.md`
+- include required runtime resources such as `scripts/`, `references/`, `assets/`, and `requirements.txt`
+- exclude repository-only files such as `README.md`, `README.zh-CN.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `.git/`, and `.github/`
+
+Run the following from the repository root to create both `dist/knowledge-base.zip` and `dist/knowledge-base.skill`.
 
 ```bash
 python - <<'PY'
 from pathlib import Path
 import shutil
+import tempfile
 import zipfile
 
 root = Path.cwd().resolve()
 dist = root / "dist"
 dist.mkdir(exist_ok=True)
 
-package_name = "knowledge-base-skill"
+skill_name = "knowledge-base"
 include = [
     "SKILL.md",
-    "README.md",
-    "README.zh-CN.md",
-    "CHANGELOG.md",
-    "CONTRIBUTING.md",
-    "LICENSE",
-    "NOTICE",
-    "pyproject.toml",
     "requirements.txt",
-    "requirements-dev.txt",
     "assets",
     "references",
     "scripts",
 ]
 
-zip_path = dist / f"{package_name}.zip"
-skill_path = dist / f"{package_name}.skill"
+zip_path = dist / f"{skill_name}.zip"
+skill_path = dist / f"{skill_name}.skill"
 
-with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+with tempfile.TemporaryDirectory() as tmp:
+    stage_root = Path(tmp) / skill_name
+    stage_root.mkdir()
+
     for item in include:
-        path = root / item
-        if path.is_dir():
-            for child in sorted(path.rglob("*")):
-                if child.is_file() and "__pycache__" not in child.parts:
-                    arcname = Path(package_name) / child.relative_to(root)
-                    zf.write(child, arcname)
-        elif path.is_file():
-            arcname = Path(package_name) / path.relative_to(root)
-            zf.write(path, arcname)
+        src = root / item
+        dst = stage_root / item
+        if src.is_dir():
+            shutil.copytree(
+                src,
+                dst,
+                ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
+            )
+        elif src.is_file():
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
+
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for path in sorted(stage_root.rglob("*")):
+            if path.is_file():
+                zf.write(path, path.relative_to(stage_root.parent))
 
 shutil.copyfile(zip_path, skill_path)
 
@@ -201,11 +197,12 @@ print(f"Created: {skill_path}")
 PY
 ```
 
-This packaging approach is intentionally narrow:
+This packaging approach is intentionally strict:
 
-- it includes the runtime scripts and skill metadata
-- it excludes `.git`, `.github`, test artifacts, caches, and local virtual environments
-- it keeps packaging logic out of the skill's actual runtime directory structure
+- it produces a clean skill bundle instead of a repository snapshot
+- it keeps repository documentation out of the installed skill
+- it preserves the expected skill folder structure inside the archive
+- it keeps packaging logic out of `scripts/`
 
 ## Limits and Non-Goals
 

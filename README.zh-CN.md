@@ -4,9 +4,9 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
 
-English README: [README.md](./README.md)
+[English](./README.md) | 简体中文
 
-面向开发者的本地优先知识库工具。它的目标很直接：把混乱的办公文档转成结构化 Markdown，并在此之上建立一个可维护、可复用的本地知识库工作流。
+面向开发者、运营人员和普通办公用户的本地优先知识库工具。它的目标很直接：把混乱的办公文档转成结构化 Markdown，并通过支持 Skill 的 Agent 软件直接使用这些能力。
 
 如果你正需要下面这些能力，这个仓库值得你直接试用或 fork：
 
@@ -14,6 +14,7 @@ English README: [README.md](./README.md)
 - 在 Excel 入库前先做复杂度判断，而不是一把梭硬解析
 - 初始化一个带 `README`、`FAQ`、`BADCASE` 约定的本地知识库
 - 复用一层小而清晰的文档收录能力，而不是从大项目里自己拆
+- 把这套能力作为 Skill 分发给终端用户，而不是教每个人手工搭流程
 
 ## 这个仓库解决什么问题
 
@@ -31,7 +32,7 @@ English README: [README.md](./README.md)
 - 本地知识库初始化与迁移
 - 基于 FAQ / README / 原文精读 / BADCASE 的检索纪律
 
-它故意保持很小。原因很简单：越小越容易审查、fork、改造和嵌入到你自己的 agent 工作流里。
+它故意保持很小。原因很简单：越小越容易安装、审查、fork、改造和嵌入到你自己的 agent 工作流里。
 
 ## 核心能力
 
@@ -63,36 +64,21 @@ English README: [README.md](./README.md)
 
 ## 快速开始
 
-### 环境要求
+### 方式 1：作为本地 Skill 安装
 
-- Python `3.10+`
-- 首次运行需要联网，以便自动补 Pandoc
-- 如果要处理 `.doc` 或 `.ppt`，需要 LibreOffice
+这是最干净的使用方式。适用于 Claude Code、Codex、OpenClaw，以及其他支持本地 Skill 的 Coding Agent 或通用 Agent 客户端。
 
-### 安装运行时依赖
+1. 克隆或下载这个仓库。
+2. 把 Skill 内容放到你的本地 Skills 目录，或者把当前仓库配置为本地 Skill 来源。
+3. 在客户端里让 Agent 安装或使用 `knowledge-base` 这个 Skill。
 
-```bash
-python scripts/ensure_deps.py
-```
+真正的运行时准备工作，会在 Skill 被实际调用时按其工作流自动完成。
 
-### 初始化知识库
+### 方式 2：打包后导入客户端
 
-```bash
-python scripts/kb_config.py --set ~/my-kb
-python scripts/kb_init.py ~/my-kb
-```
+如果你的客户端支持导入 Skill 包，那么先打包成 `.zip` 或 `.skill`，再通过客户端的 Skill 导入界面安装即可。
 
-### 转换文档
-
-```bash
-python scripts/smart_convert.py ./example.pdf --json-output
-```
-
-### 分析 Excel
-
-```bash
-python scripts/complexity_analyzer.py ./report.xlsx
-```
+注意，导入包应该只包含 Skill 运行真正需要的内容，而不是整个仓库的说明文档。
 
 ## 典型用法
 
@@ -114,10 +100,11 @@ python scripts/smart_convert.py ./deck.pptx --json-output
 
 真正的 agent 工作流约定写在 [SKILL.md](./SKILL.md) 里。如果你要接到自己的 agent 框架里，应该优先看那个文件。
 
-## 为什么值得 fork
+## 为什么值得使用或 fork
 
 - 你只想要文档收录层，不想继承整套 agent 架构
 - 你需要一个 Office 文档转 Markdown 的参考实现
+- 你希望办公用户通过支持 Skill 的客户端直接安装使用，而不是学习内部脚本
 - 你希望本地知识库流程足够简单，方便当天就改造
 - 你更接受“扫描 PDF 明确失败并转 OCR”，而不是静默产出垃圾结果
 - 你希望起点就带测试、CI 和 Apache-2.0 许可
@@ -153,54 +140,65 @@ CI 会在 Python `3.10`、`3.11`、`3.12` 上执行相同检查。
 
 ## 打包成可分发的 Skill
 
-如果你想得到一个干净的分发包，但又不想把打包逻辑塞进 `scripts/`，可以直接在仓库根目录执行下面这段代码。它会生成：
+按 Skill 的打包模型，分发包里应该只放 Skill 本体，以及它运行时真正需要的文件。
 
-- `dist/knowledge-base-skill.zip`
-- `dist/knowledge-base-skill.skill`
+也就是说：
 
-其中 `.skill` 本质上就是 zip 容器，只是换了扩展名，方便下游工具按 skill 包处理。
+- 应该包含 `SKILL.md`
+- 应该包含运行时需要的 `scripts/`、`references/`、`assets/`、`requirements.txt`
+- 不应该把 `README.md`、`README.zh-CN.md`、`CHANGELOG.md`、`CONTRIBUTING.md`、`.git/`、`.github/` 这些仓库级文档或元信息塞进安装包
+
+在仓库根目录执行下面这段代码，会生成：
+
+- `dist/knowledge-base.zip`
+- `dist/knowledge-base.skill`
+
+其中 `.skill` 本质上仍然是 zip 容器，只是扩展名不同，方便支持 Skill 导入的客户端识别。
 
 ```bash
 python - <<'PY'
 from pathlib import Path
 import shutil
+import tempfile
 import zipfile
 
 root = Path.cwd().resolve()
 dist = root / "dist"
 dist.mkdir(exist_ok=True)
 
-package_name = "knowledge-base-skill"
+skill_name = "knowledge-base"
 include = [
     "SKILL.md",
-    "README.md",
-    "README.zh-CN.md",
-    "CHANGELOG.md",
-    "CONTRIBUTING.md",
-    "LICENSE",
-    "NOTICE",
-    "pyproject.toml",
     "requirements.txt",
-    "requirements-dev.txt",
     "assets",
     "references",
     "scripts",
 ]
 
-zip_path = dist / f"{package_name}.zip"
-skill_path = dist / f"{package_name}.skill"
+zip_path = dist / f"{skill_name}.zip"
+skill_path = dist / f"{skill_name}.skill"
 
-with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+with tempfile.TemporaryDirectory() as tmp:
+    stage_root = Path(tmp) / skill_name
+    stage_root.mkdir()
+
     for item in include:
-        path = root / item
-        if path.is_dir():
-            for child in sorted(path.rglob("*")):
-                if child.is_file() and "__pycache__" not in child.parts:
-                    arcname = Path(package_name) / child.relative_to(root)
-                    zf.write(child, arcname)
-        elif path.is_file():
-            arcname = Path(package_name) / path.relative_to(root)
-            zf.write(path, arcname)
+        src = root / item
+        dst = stage_root / item
+        if src.is_dir():
+            shutil.copytree(
+                src,
+                dst,
+                ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
+            )
+        elif src.is_file():
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
+
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for path in sorted(stage_root.rglob("*")):
+            if path.is_file():
+                zf.write(path, path.relative_to(stage_root.parent))
 
 shutil.copyfile(zip_path, skill_path)
 
@@ -209,11 +207,12 @@ print(f"Created: {skill_path}")
 PY
 ```
 
-这套打包方式是刻意收敛过的：
+这套打包方式是刻意收紧过的：
 
-- 只打包真正需要的 skill 内容和元数据
-- 不带 `.git`、`.github`、测试缓存、虚拟环境等噪音
-- 打包逻辑留在 README，不污染运行时 `scripts/` 目录
+- 产出的是干净 Skill 包，而不是整个仓库快照
+- 仓库文档不会被误打进安装包
+- 压缩包内部保留了标准的 Skill 目录结构
+- 打包逻辑只存在于 README，不污染 `scripts/`
 
 ## 限制和非目标
 
