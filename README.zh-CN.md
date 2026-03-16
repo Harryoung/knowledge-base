@@ -6,86 +6,146 @@
 
 [English](./README.md) | 简体中文
 
-`local-knowledge-base` 是一个独立的 Skill 仓库。真正的 Skill 本体放在 [local-knowledge-base/](./local-knowledge-base) 目录下，仓库根目录只保留开发、测试、CI 和发布相关文件。
+**把你的本地文件夹变成一个结构化、可问答的知识库 —— 由 AI Agent 驱动。**
 
-这个项目适合三类人：
+大多数文档管理工具要么把你绑在云服务上，要么要求你搭向量数据库。`local-knowledge-base` 走了一条不同的路：它给你的 AI Agent（Claude Code、Codex、OpenClaw 等）赋予了文档收录、索引维护和知识问答的能力 —— 全程基于本地纯文件，不依赖任何外部服务。
 
-- 想要一个小而干净的文档收录 Skill，而不是从大而杂的 Agent 系统里自己拆能力的开发者
-- 使用支持 Skill 的客户端，希望直接安装就能用的办公团队和普通白领
-- 需要本地优先文档转换、Excel 路由、FAQ 维护和知识库初始化能力的运营或实施人员
+## 核心能力
 
-## 这个 Skill 能做什么
+| 能力 | 做什么 | 为什么重要 |
+|------|--------|-----------|
+| **文档格式转换** | DOCX、DOC、PDF、PPTX、PPT → Markdown | 保留完整结构（表格、列表、图片），不只是提取文字 |
+| **扫描版 PDF 检测** | 识别扫描 PDF 并分流到 OCR | 不再静默输出乱码垃圾 |
+| **Excel 智能路由** | 处理前分析表格复杂度 | 简单表格走 Pandas 快速解析，复杂报表走 HTML 语义模式 |
+| **五级问答链** | FAQ → README 导航 → 精读 → 关键词搜索 → BADCASE 记录 | 优先快速命中，全文检索是最后手段 |
+| **知识库初始化与迁移** | 创建目录结构、迁移已有知识库 | 一条命令起步，迁移不丢数据 |
 
-这个 Skill 只做本地知识库工作流里真正关键的底层部分：
+## 工作原理
 
-- 把 `DOCX`、`DOC`、`PDF`、`PPTX`、`PPT` 转成 Markdown
-- 在处理 Excel 前先做复杂度路由
-- 初始化和迁移本地知识库
-- 基于 FAQ、README 导航、原文精读和 BADCASE 进行问答
-
-对于扫描版 PDF，它会明确检测并分流到 OCR，而不是假装转换成功。
-
-## 仓库结构
-
-这个仓库分成两层：
-
-- [local-knowledge-base/](./local-knowledge-base)：Skill 本体
-- 仓库根目录：文档、测试、CI、许可证、变更记录和贡献说明
-
-### Skill 目录结构
-
-```text
-local-knowledge-base/
-├── SKILL.md
-├── requirements.txt
-├── assets/
-├── references/
-└── scripts/
+```
+         ┌─────────────────────────────────────────────┐
+         │           你的 AI Agent（宿主应用）            │
+         └──────────────────┬──────────────────────────┘
+                            │ 安装并调用
+                            ▼
+┌──────────────────────────────────────────────────────────┐
+│                local-knowledge-base Skill                 │
+│                                                          │
+│  ┌──────────┐  ┌──────────────┐  ┌────────────────────┐  │
+│  │ 文档收录  │  │   知识问答    │  │   知识库管理       │  │
+│  │          │  │              │  │                    │  │
+│  │ DOCX ───┐│  │ FAQ ────────┐│  │ 初始化 / 迁移 /   │  │
+│  │ PDF  ───┤│  │ README ─────┤│  │ 配置              │  │
+│  │ PPTX ───┤│  │ 精读 ───────┤│  └────────────────────┘  │
+│  │ Excel ──┘│  │ 搜索 ───────┤│                          │
+│  └──────────┘  │ BADCASE ────┘│                          │
+│                └──────────────┘                          │
+└──────────────────────────────────────────────────────────┘
+                            │ 读写本地文件
+                            ▼
+              ┌──────────────────────────┐
+              │   ~/your-knowledge-base   │
+              │                          │
+              │   README.md  (索引导航)   │
+              │   FAQ.md     (高频问答)   │
+              │   BADCASE.md (待补充)     │
+              │   docs/      (文档内容)   │
+              └──────────────────────────┘
 ```
 
-### 仓库根目录结构
-
-```text
-.
-├── .github/workflows/ci.yml
-├── local-knowledge-base/
-├── tests/
-├── README.md
-├── README.zh-CN.md
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-├── LICENSE
-├── NOTICE
-├── pyproject.toml
-└── requirements-dev.txt
-```
+这个 Skill 是 **AI Agent 的插件**，不是独立的命令行工具。它通过结构化工作流和 Python 脚本，教会你的 Agent *如何*管理一个知识库。可以理解为：给你的 Agent 增加了一项专业能力。
 
 ## 快速开始
 
-### 方式 1：直接安装 Skill 文件夹
+### 1. 安装 Skill
 
-这是最干净的方式。适用于 Claude Code、Codex、OpenClaw，以及其他支持本地 Skill 的客户端。
+```bash
+# 克隆仓库
+git clone https://github.com/Harryoung/local-knowledge-base.git
 
-1. 克隆或下载这个仓库。
-2. 直接使用 [local-knowledge-base/](./local-knowledge-base) 这个文件夹作为 Skill 安装目录。
-3. 把它放进本地 Skills 目录，或者在客户端里将其配置为本地 Skill 来源。
-4. 让 Agent 安装或使用 `local-knowledge-base`。
+# Skill 本体是 local-knowledge-base/ 子目录
+# 把这个目录指定为你 AI 客户端的本地 Skill 即可
+```
 
-### 方式 2：导入打包后的 Skill 包
+兼容所有支持 Skill 格式的客户端：**Claude Code**、**Codex**、**OpenClaw** 等。
 
-如果你的客户端支持导入 `.zip` 或 `.skill`，那么把 `local-knowledge-base/` 目录打包后，通过客户端的 Skill 导入界面安装即可。
+### 2. 直接用
 
-## 打包这个 Skill
+安装后，用自然语言和 Agent 对话即可：
 
-现在 Skill 已经有了独立的顶层目录，所以打包时应该直接打包这个文件夹，而不是再从仓库根目录里拼装。
+- *"在 ~/work/kb 建一个知识库"*
+- *"把这份 PDF 收录到知识库"*
+- *"入职文档里关于年假的规定是什么？"*
+- *"把知识库迁移到新目录"*
 
-在仓库根目录执行：
+Skill 会自动处理格式转换、冲突检测、索引维护和检索问答。
+
+## 支持的格式
+
+| 格式 | 转换方式 | 说明 |
+|------|---------|------|
+| DOCX | Pandoc | 完整保留文档结构 |
+| DOC | LibreOffice → Pandoc | 先转 DOCX 再处理 |
+| PDF（电子版） | PyMuPDF4LLM | 高速、高保真提取 |
+| PDF（扫描版） | 检测 → OCR 分流 | 返回 `needs_ocr: true`，不输出垃圾 |
+| PPTX | pptx2md | 保留幻灯片结构和演讲者注记 |
+| PPT | LibreOffice → pptx2md | 先转 PPTX 再处理 |
+| Excel | 复杂度分析器 | 简单表 → Pandas，复杂报表 → HTML 语义模式 |
+
+## 仓库结构
+
+仓库把 **Skill 运行时** 和 **开发文件** 分开管理：
+
+```
+.
+├── local-knowledge-base/        ← Skill 本体（安装时只需要这个）
+│   ├── SKILL.md                    入口 & 工作流定义
+│   ├── requirements.txt            运行时依赖
+│   ├── scripts/                    Python 脚本（转换、分析、初始化）
+│   ├── assets/                     模板文件
+│   └── references/                 详细工作流文档
+│
+├── tests/                       ← 单元测试（不属于 Skill）
+├── .github/workflows/ci.yml    ← CI 流水线
+├── pyproject.toml               ← 项目元数据
+└── requirements-dev.txt         ← 开发依赖
+```
+
+这意味着打包非常简单 —— 直接压缩 `local-knowledge-base/` 就是一个干净的 Skill 包，不会混入任何仓库文件。
+
+## 设计决策
+
+几个让这个项目与众不同的选择：
+
+- **扫描 PDF 的诚实处理。** 不会静默生成空白或乱码 Markdown。扫描版 PDF 会被明确检测并标记，Agent 知道要把它们分流到 OCR，而不是假装转换成功了。
+
+- **Excel 复杂度路由。** 不是所有表格都一样。一个 10,000 行的数据表和一份带合并单元格的财务报表，需要完全不同的解析策略。复杂度分析器在处理前就做好路由决策。
+
+- **语义冲突检测。** 收录新文档时，重复检测看的是内容含义，不是文件名。两个名字不同但内容相同的文件会被识别出来。
+
+- **原子性文件更新。** FAQ、BADCASE 和 README 文件永远不会被部分覆盖。完整内容先在内存中准备好，再原子性替换，防止文件损坏。
+
+- **速度优先的检索链。** 问答时先查 FAQ 和 README 导航，再做文件精读和 grep 搜索。大多数问题不需要扫描整个知识库。
+
+## 开发
+
+```bash
+# 安装开发依赖
+python -m pip install -r requirements-dev.txt
+
+# 运行测试
+python -m unittest discover -s tests -v
+
+# 语法检查
+python -m py_compile local-knowledge-base/scripts/*.py tests/*.py
+```
+
+### 打包 Skill
 
 ```bash
 python - <<'PY'
 from pathlib import Path
-import shutil
-import zipfile
+import shutil, zipfile
 
 root = Path.cwd().resolve()
 skill_dir = root / "local-knowledge-base"
@@ -101,53 +161,15 @@ with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
             zf.write(path, path.relative_to(root))
 
 shutil.copyfile(zip_path, skill_path)
-
 print(f"Created: {zip_path}")
 print(f"Created: {skill_path}")
 PY
 ```
 
-这样打出来的包是干净的，因为它只包含 Skill 文件夹本身：
+## 上游项目
 
-- 会包含 `SKILL.md`、`requirements.txt`、`assets/`、`references/`、`scripts/`
-- 不会混入 `README.md`、`CHANGELOG.md`、`CONTRIBUTING.md`、`.git/`、`.github/` 这些仓库级文件
-- 压缩包内部会保留标准的 `local-knowledge-base/` 目录名
+从 [Harryoung/efka](https://github.com/Harryoung/efka) 中独立提取。如果你需要完整的 Agent 系统，去看那个仓库。如果只需要知识库能力作为可复用 Skill，这里是更轻量的入口。
 
-## 开发
+## 许可证
 
-安装开发依赖并运行测试：
-
-```bash
-python -m pip install -r requirements-dev.txt
-python -m unittest discover -s tests -v
-python -m py_compile local-knowledge-base/scripts/*.py tests/*.py
-```
-
-如果你在仓库根目录直接调试 Skill 脚本，应该使用 `local-knowledge-base/` 下的路径，例如：
-
-```bash
-python local-knowledge-base/scripts/kb_config.py --check
-python local-knowledge-base/scripts/smart_convert.py ./example.pdf --json-output
-```
-
-## 为什么值得使用或 fork
-
-- 你要的是一个独立 Skill，不是一个臃肿的大型 Agent 项目
-- 你希望办公用户通过客户端安装 Skill，而不是学习内部脚本
-- 你需要扫描版 PDF 的显式 OCR 分流，而不是静默产生垃圾结果
-- 你希望仓库把 Skill 运行时文件和开发发布文件明确分层
-
-## 与上游项目的关系
-
-这个仓库是原始项目 [Harryoung/efka](https://github.com/Harryoung/efka) 中知识库能力的独立抽取版本。
-
-如果你需要更完整的 Agent 上下文和上游演进路径，可以去看那个仓库。  
-如果你只想要可复用的本地知识库 Skill，这个仓库是更小、更干净、更容易维护的入口。
-
-## 项目元信息
-
-- Skill 入口：[local-knowledge-base/SKILL.md](./local-knowledge-base/SKILL.md)
-- License: [LICENSE](./LICENSE)
-- 变更记录：[CHANGELOG.md](./CHANGELOG.md)
-- 贡献说明：[CONTRIBUTING.md](./CONTRIBUTING.md)
-- 上游说明：[NOTICE](./NOTICE)
+[Apache-2.0](./LICENSE)

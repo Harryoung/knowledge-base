@@ -6,86 +6,146 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-`local-knowledge-base` is a standalone Skill repository. The actual Skill bundle lives in [local-knowledge-base/](./local-knowledge-base), while the repository root contains development, testing, CI, and publishing files.
+**Turn your local folder into a structured, queryable knowledge base — powered by AI agents.**
 
-This project is useful for:
+Most document management tools either lock you into a cloud service or require a vector database. `local-knowledge-base` takes a different approach: it gives your AI agent (Claude Code, Codex, OpenClaw, etc.) the ability to ingest documents, maintain a navigable index, and answer questions — all from plain files on your machine.
 
-- developers who want a small, auditable document-ingestion skill instead of extracting one from a larger agent system
-- office teams who use Skill-enabled clients and want to install the capability directly
-- operators who need a local-first workflow for document conversion, Excel routing, FAQ maintenance, and KB initialization
+## Key Features
 
-## What the Skill Does
+| Feature | What it does | Why it matters |
+|---------|-------------|----------------|
+| **Document Conversion** | Converts DOCX, DOC, PDF, PPTX, PPT → Markdown | Preserves structure (tables, lists, images), not just raw text |
+| **Scanned PDF Detection** | Identifies scanned PDFs and routes to OCR | No more silent garbage output from image-based pages |
+| **Excel Smart Routing** | Analyzes spreadsheet complexity before processing | Simple tables get fast Pandas parsing; complex reports get semantic HTML |
+| **5-Level Q&A Chain** | FAQ → README navigation → targeted reading → keyword search → BADCASE logging | Fast answers first, full-text search as last resort |
+| **KB Initialization & Migration** | Sets up directory structure, moves existing KBs | One command to start; non-destructive migration |
 
-The Skill focuses on the lowest-level pieces that matter in a local knowledge-base workflow:
+## How It Works
 
-- convert `DOCX`, `DOC`, `PDF`, `PPTX`, and `PPT` into Markdown
-- route Excel files before choosing a processing path
-- initialize and migrate a local knowledge base
-- answer from FAQ, README navigation, source reading, and BADCASE feedback
-
-Scanned PDFs are detected and explicitly routed to OCR instead of pretending conversion succeeded.
-
-## Repository Structure
-
-The repository is split into two layers:
-
-- [local-knowledge-base/](./local-knowledge-base): the Skill itself
-- repository root: documentation, tests, CI, license, changelog, and contribution files
-
-### Skill Layout
-
-```text
-local-knowledge-base/
-├── SKILL.md
-├── requirements.txt
-├── assets/
-├── references/
-└── scripts/
+```
+         ┌─────────────────────────────────────────────┐
+         │           Your AI Agent (host app)           │
+         └──────────────────┬──────────────────────────┘
+                            │ installs & invokes
+                            ▼
+┌──────────────────────────────────────────────────────────┐
+│                  local-knowledge-base Skill               │
+│                                                          │
+│  ┌──────────┐  ┌──────────────┐  ┌────────────────────┐  │
+│  │ Ingestion │  │  Q&A Engine  │  │  KB Management     │  │
+│  │          │  │              │  │                    │  │
+│  │ DOCX ───┐│  │ FAQ ────────┐│  │ Init / Migrate /  │  │
+│  │ PDF  ───┤│  │ README nav ─┤│  │ Config             │  │
+│  │ PPTX ───┤│  │ File read ──┤│  └────────────────────┘  │
+│  │ Excel ──┘│  │ Grep ───────┤│                          │
+│  └──────────┘  │ BADCASE ────┘│                          │
+│                └──────────────┘                          │
+└──────────────────────────────────────────────────────────┘
+                            │ reads & writes
+                            ▼
+              ┌──────────────────────────┐
+              │   ~/your-knowledge-base   │
+              │                          │
+              │   README.md  (index)     │
+              │   FAQ.md     (Q&A pairs) │
+              │   BADCASE.md (gaps)      │
+              │   docs/      (content)   │
+              └──────────────────────────┘
 ```
 
-### Repository Root
-
-```text
-.
-├── .github/workflows/ci.yml
-├── local-knowledge-base/
-├── tests/
-├── README.md
-├── README.zh-CN.md
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-├── LICENSE
-├── NOTICE
-├── pyproject.toml
-└── requirements-dev.txt
-```
+The Skill is a **plugin for AI agents**, not a standalone CLI app. It teaches your agent *how* to manage a knowledge base through structured workflows and Python scripts. Think of it as giving your agent a new professional capability.
 
 ## Quick Start
 
-### Option 1. Install the Skill Folder
+### 1. Install as a Skill
 
-This is the cleanest path for Claude Code, Codex, OpenClaw, and other clients that support local Skills.
+```bash
+# Clone the repository
+git clone https://github.com/Harryoung/local-knowledge-base.git
 
-1. Clone or download this repository.
-2. Use the [local-knowledge-base/](./local-knowledge-base) folder as the installed Skill folder.
-3. Add that folder to your local Skills directory, or configure your client to load it as a local Skill.
-4. Ask the agent to install or use `local-knowledge-base`.
+# The Skill is the local-knowledge-base/ subdirectory.
+# Point your AI client to this folder as a local Skill.
+```
 
-### Option 2. Import a Packaged Skill Bundle
+Works with any client that supports the Skill format: **Claude Code**, **Codex**, **OpenClaw**, and others.
 
-If your client supports importing a `.zip` or `.skill` bundle, package the `local-knowledge-base/` folder and import the result through the client's Skill UI.
+### 2. Use It
 
-## Package the Skill
+Once installed, just talk to your agent naturally:
 
-Because the Skill now lives in its own top-level folder, packaging should archive that folder directly instead of trying to reconstruct the bundle from repository files.
+- *"Set up a knowledge base at ~/work/kb"*
+- *"Ingest this PDF into the knowledge base"*
+- *"What does our onboarding doc say about vacation policy?"*
+- *"Move the knowledge base to a new folder"*
 
-Run the following from the repository root:
+The Skill handles format conversion, conflict detection, index maintenance, and retrieval automatically.
+
+## Supported Formats
+
+| Format | Method | Notes |
+|--------|--------|-------|
+| DOCX | Pandoc | Full structure preservation |
+| DOC | LibreOffice → Pandoc | Converts to DOCX first |
+| PDF (digital) | PyMuPDF4LLM | Fast, high-fidelity extraction |
+| PDF (scanned) | Detected → OCR routing | Returns `needs_ocr: true` instead of garbage |
+| PPTX | pptx2md | Preserves slide structure and speaker notes |
+| PPT | LibreOffice → pptx2md | Converts to PPTX first |
+| Excel | Complexity analyzer | Routes to Pandas (simple) or HTML semantic mode (complex) |
+
+## Repository Structure
+
+The repo separates the **Skill runtime** from **development files**:
+
+```
+.
+├── local-knowledge-base/        ← The Skill (what gets installed)
+│   ├── SKILL.md                    Entry point & workflow definitions
+│   ├── requirements.txt            Runtime dependencies
+│   ├── scripts/                    Python scripts (convert, analyze, init)
+│   ├── assets/                     Templates
+│   └── references/                 Detailed workflow documentation
+│
+├── tests/                       ← Unit tests (not part of the Skill)
+├── .github/workflows/ci.yml    ← CI pipeline
+├── pyproject.toml               ← Project metadata
+└── requirements-dev.txt         ← Dev dependencies
+```
+
+This means packaging is trivial — just archive `local-knowledge-base/` and you have a clean Skill bundle with zero repo noise.
+
+## Design Decisions
+
+A few choices that set this project apart:
+
+- **Scanned PDF honesty.** Instead of silently producing empty or garbled Markdown, scanned PDFs are detected and explicitly flagged. The agent knows to route them to OCR rather than pretending the conversion worked.
+
+- **Excel complexity routing.** Not all spreadsheets are equal. A 10,000-row data table and a financial report with merged cells need completely different parsing strategies. The complexity analyzer decides before processing begins.
+
+- **Semantic conflict detection.** When ingesting a new document, duplicates are checked by content meaning, not just filename. Two files named differently but covering the same topic get caught.
+
+- **Atomic file updates.** FAQ, BADCASE, and README files are never partially overwritten. The full content is prepared in memory and replaced atomically to prevent corruption.
+
+- **Speed-first retrieval.** The Q&A chain checks FAQ and README navigation before doing any file reads or grep searches. Most questions are answered without scanning the full corpus.
+
+## Development
+
+```bash
+# Install dev dependencies
+python -m pip install -r requirements-dev.txt
+
+# Run tests
+python -m unittest discover -s tests -v
+
+# Syntax check
+python -m py_compile local-knowledge-base/scripts/*.py tests/*.py
+```
+
+### Package the Skill
 
 ```bash
 python - <<'PY'
 from pathlib import Path
-import shutil
-import zipfile
+import shutil, zipfile
 
 root = Path.cwd().resolve()
 skill_dir = root / "local-knowledge-base"
@@ -101,52 +161,15 @@ with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
             zf.write(path, path.relative_to(root))
 
 shutil.copyfile(zip_path, skill_path)
-
 print(f"Created: {zip_path}")
 print(f"Created: {skill_path}")
 PY
 ```
 
-This produces a clean bundle because it packages only the Skill folder:
+## Upstream
 
-- includes `SKILL.md`, `requirements.txt`, `assets/`, `references/`, and `scripts/`
-- excludes repository-only files such as `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `.git/`, and `.github/`
-- preserves the expected `local-knowledge-base/` folder name inside the archive
+Extracted from [Harryoung/efka](https://github.com/Harryoung/efka). If you want the full agent system, start there. If you just want the knowledge-base capability as a reusable Skill, this is the lighter entry point.
 
-## Development
+## License
 
-Install dev dependencies and run tests:
-
-```bash
-python -m pip install -r requirements-dev.txt
-python -m unittest discover -s tests -v
-python -m py_compile local-knowledge-base/scripts/*.py tests/*.py
-```
-
-If you want to run the Skill scripts directly from the repository root during development, use paths under `local-knowledge-base/`, for example:
-
-```bash
-python local-knowledge-base/scripts/kb_config.py --check
-python local-knowledge-base/scripts/smart_convert.py ./example.pdf --json-output
-```
-
-## Why People Use or Fork It
-
-- You want a standalone Skill instead of a monolithic agent project.
-- You want office users to install a Skill through a client instead of learning internal scripts.
-- You want explicit OCR routing for scanned PDFs instead of silent garbage output.
-- You want a repository that cleanly separates Skill runtime files from development and publishing files.
-
-## Upstream Relationship
-
-This repository is an extracted, standalone subset of the original [Harryoung/efka](https://github.com/Harryoung/efka) project.
-
-If you want the broader agent context and upstream evolution path, start there. If you only want the local knowledge-base layer as a reusable Skill, this repository is the smaller and more maintainable entry point.
-
-## Project Metadata
-
-- Skill entry: [local-knowledge-base/SKILL.md](./local-knowledge-base/SKILL.md)
-- License: [LICENSE](./LICENSE)
-- Changelog: [CHANGELOG.md](./CHANGELOG.md)
-- Contribution guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
-- Upstream notice: [NOTICE](./NOTICE)
+[Apache-2.0](./LICENSE)
