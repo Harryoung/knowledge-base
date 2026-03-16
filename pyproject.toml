@@ -1,0 +1,12 @@
+[project]
+name = "knowledge-base-skill"
+version = "0.1.0"
+description = "Standalone local knowledge-base skill extracted from EFKA."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+keywords = ["knowledge-base", "skill", "markdown", "local-first", "document-conversion"]
+
+[tool.unittest]
+start-directory = "tests"
+pattern = "test_*.py"

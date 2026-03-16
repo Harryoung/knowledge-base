@@ -1,0 +1,6 @@
+knowledge-base-skill
+
+This repository is an extracted and simplified standalone skill derived from the
+EFKA project. It reuses and adapts document-conversion and Excel-routing ideas
+from EFKA while removing the original web-service, Redis, IM-channel, and
+multi-agent runtime dependencies.
