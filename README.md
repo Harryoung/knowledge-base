@@ -1,101 +1,166 @@
 # knowledge-base
 
-独立可发布的本地知识库 Skill。它从 EFKA 中抽取了最核心的两类能力：
+[![CI](https://github.com/Harryoung/knowledge-base/actions/workflows/ci.yml/badge.svg)](https://github.com/Harryoung/knowledge-base/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
 
-- 文档收录：DOCX / DOC / PDF / PPTX / PPT 转 Markdown，Excel 复杂度分析，知识库初始化与迁移
-- 知识问答：FAQ 优先、README 导航、目标文件精读、关键词兜底、BADCASE 回流
+Local-first knowledge base tooling for developers who want to turn messy office documents into structured Markdown and build a reusable Q&A workflow on top.
 
-## Upstream Relationship
+This repository is useful if you want to:
 
-当前仓库是从原始项目 [Harryoung/efka](https://github.com/Harryoung/efka) 中抽取并独立发布的知识库能力子集。
-如需查看完整上下文、原始实现背景或上游演进，请回到该仓库。
+- convert `DOCX`, `DOC`, `PDF`, `PPTX`, and `PPT` into Markdown with predictable outputs
+- route Excel files before ingestion instead of blindly parsing every spreadsheet the same way
+- bootstrap a local knowledge base with `README`, `FAQ`, and `BADCASE` conventions
+- fork a small, auditable document-ingestion layer instead of extracting it yourself from a larger agent project
+
+## Why This Repo Exists
+
+Most internal knowledge bases fail for boring reasons: the source files are inconsistent, office formats do not round-trip cleanly, and nobody maintains a disciplined place for FAQs and failure cases.
+
+`knowledge-base` focuses on the lowest-level pieces that matter:
+
+- document conversion into Markdown
+- Excel complexity routing
+- local knowledge-base initialization and migration
+- retrieval discipline based on FAQ, README navigation, source reading, and BADCASE feedback
+
+It is intentionally small. That makes it easier to fork, inspect, and adapt to your own agent or document workflow.
+
+## What You Get
+
+### 1. Document Conversion That Matches Real Inputs
+
+- `DOCX` -> Markdown via Pandoc
+- `DOC` -> `DOCX` via LibreOffice, then Markdown
+- digital `PDF` -> Markdown via PyMuPDF4LLM
+- scanned `PDF` detection with explicit OCR handoff instead of fake success
+- `PPTX` -> Markdown via `pptx2md`
+- `PPT` -> `PPTX` via LibreOffice, then Markdown
+
+The converter also keeps extracted images in a sibling folder when needed.
+
+### 2. Excel Routing Before You Burn Tokens or Time
+
+`scripts/complexity_analyzer.py` inspects workbook structure and tells you whether a sheet looks like a standard table or a more complex layout. That is the difference between a pipeline that scales and one that collapses on the first ugly spreadsheet.
+
+### 3. A Minimal Local Knowledge-Base Contract
+
+`scripts/kb_init.py` creates a starter knowledge base with:
+
+- `README.md` for navigation
+- `FAQ.md` for repeated questions
+- `BADCASE.md` for unanswered or weakly answered cases
+- `contents_overview/` for organized intake
+
+This is enough structure to be useful without dragging in a full platform.
+
+## Quick Start
+
+### Requirements
+
+- Python `3.10+`
+- internet access on first run so Pandoc can be installed automatically when missing
+- LibreOffice if you need `.doc` or `.ppt` support
+
+### Install Runtime Dependencies
+
+```bash
+python scripts/ensure_deps.py
+```
+
+### Initialize a Knowledge Base
+
+```bash
+python scripts/kb_config.py --set ~/my-kb
+python scripts/kb_init.py ~/my-kb
+```
+
+### Convert a Document
+
+```bash
+python scripts/smart_convert.py ./example.pdf --json-output
+```
+
+### Analyze an Excel File
+
+```bash
+python scripts/complexity_analyzer.py ./report.xlsx
+```
+
+## Example Workflows
+
+### Ingest a File Into Your Own KB
+
+1. Set or check the KB path.
+2. Convert the source file to Markdown.
+3. Place the Markdown and extracted assets into your KB.
+4. Update KB navigation or FAQ entries when the document is important.
+
+Relevant commands:
+
+```bash
+python scripts/kb_config.py --check
+python scripts/smart_convert.py ./deck.pptx --json-output
+```
+
+### Run the Project as a Reusable Skill
+
+The operational workflow for agent usage lives in [SKILL.md](./SKILL.md). Use that file if you want the exact decision rules for ingestion, Q&A, migration, FAQ maintenance, and BADCASE updates.
+
+## Why Developers Fork It
+
+- You want the ingestion layer without inheriting an entire agent framework.
+- You need a reference implementation for office-document to Markdown conversion.
+- You want a local-first KB workflow that is simple enough to modify in an afternoon.
+- You prefer explicit failure on scanned PDFs over silent garbage output.
+- You want tests, CI, and an Apache-2.0 license before building on top of it.
 
 ## Repository Layout
 
 ```text
 knowledge-base/
 ├── .github/workflows/ci.yml
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-├── LICENSE
-├── NOTICE
-├── SKILL.md
-├── README.md
-├── requirements.txt
-├── requirements-dev.txt
-├── .gitignore
 ├── assets/
 ├── references/
 ├── scripts/
-└── tests/
+├── tests/
+├── SKILL.md
+├── README.md
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── LICENSE
+└── NOTICE
 ```
 
-## Runtime Requirements
+## Development
 
-- Python 3.10+
-- 网络可用时首次自动安装 Pandoc
-- 处理 `.doc` / `.ppt` 需要 LibreOffice
-
-## GitHub Release Readiness
-
-- Apache-2.0 许可证: [LICENSE](./LICENSE)
-- 派生说明: [NOTICE](./NOTICE)
-- 变更记录: [CHANGELOG.md](./CHANGELOG.md)
-- 贡献说明: [CONTRIBUTING.md](./CONTRIBUTING.md)
-- CI: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)
-
-## Quick Start
-
-```bash
-python scripts/ensure_deps.py
-python scripts/kb_config.py --set ~/my-kb
-python scripts/kb_init.py ~/my-kb
-```
-
-然后按 [SKILL.md](./SKILL.md) 工作流执行收录或问答。
-
-## Script Entry Points
-
-- `python scripts/ensure_deps.py`
-- `python scripts/kb_config.py --check`
-- `python scripts/kb_config.py --set <path>`
-- `python scripts/kb_config.py --migrate <new_path>`
-- `python scripts/kb_init.py <path>`
-- `python scripts/smart_convert.py <file> --json-output`
-- `python scripts/complexity_analyzer.py <excel_file>`
-
-## Testing
-
-安装开发依赖后运行：
+Install dev dependencies and run tests:
 
 ```bash
 python -m pip install -r requirements-dev.txt
 python -m unittest discover -s tests -v
 ```
 
-测试会使用临时目录和临时 `HOME`，不会污染用户真实配置。
+CI runs the same checks on Python `3.10`, `3.11`, and `3.12`.
 
-GitHub Actions 会在 Python 3.10 / 3.11 / 3.12 上自动执行同一套检查。
+## Limits and Non-Goals
 
-## Publishing As A Standalone Repository
+- This repo does not perform OCR itself.
+- Scanned PDFs are detected and routed out for OCR handling.
+- It is not a hosted SaaS knowledge base.
+- It does not pretend every spreadsheet should be parsed the same way.
 
-如果你要把当前目录直接推成独立仓库，最小步骤就是：
+Those constraints are deliberate. Hiding them would make the project look better for five minutes and worse forever.
 
-```bash
-cd knowledge-base
-git init
-git add .
-git commit -m "Initial standalone release"
-```
+## Upstream Relationship
 
-然后在 GitHub 上新建同名仓库并推送。
+This repository is an extracted, standalone subset of the original [Harryoung/efka](https://github.com/Harryoung/efka) project.
 
-## Design Corrections Relative To The Original Plan
+If you want the broader agent context, integrated workflows, or the upstream evolution path, start there. If you only want the knowledge-base layer, this repository is the smaller and more maintainable entry point.
 
-- FAQ / BADCASE / README 更新使用原子替换，而不是假设“永远无并发”
-- 扫描版 PDF 只做检测与分流，不伪装为已完成 OCR
+## Project Metadata
 
-## Sources
-
-- EFKA document conversion and Excel parsing workflows
-- Current library interfaces verified locally for `pypandoc`, `pymupdf4llm`, and `pptx2md`
+- License: [Apache-2.0](./LICENSE)
+- Contribution guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Changelog: [CHANGELOG.md](./CHANGELOG.md)
+- Notice for upstream derivation: [NOTICE](./NOTICE)
