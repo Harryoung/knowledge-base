@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Initialize a new knowledge-base directory structure."""
+"""Initialize a new local knowledge-base directory structure."""
 
 from __future__ import annotations
 

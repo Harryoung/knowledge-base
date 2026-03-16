@@ -1,12 +1,12 @@
 ---
-name: knowledge-base
+name: local-knowledge-base
 description: >-
   智能知识库管理。支持文档收录、Markdown转换、Excel复杂度分析、FAQ/BADCASE维护和基于本地知识库的问答。
   适用于“知识库”“收录”“归档”“入库”“基于知识库回答”等场景。首次使用需要指定知识库目录。
   建议知识问答优先通过 subagent 调用，避免检索过程占用主对话上下文。
 ---
 
-# Knowledge Base Skill
+# Local Knowledge Base Skill
 
 ## When To Use
 

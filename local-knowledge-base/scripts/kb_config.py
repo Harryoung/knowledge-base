@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Persist and manage knowledge-base path configuration."""
+"""Persist and manage local knowledge-base path configuration."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import json
 import shutil
 from pathlib import Path
 
-STATE_DIR = Path.home() / ".knowledge-base-skill"
+STATE_DIR = Path.home() / ".local-knowledge-base"
 CONFIG_FILE = STATE_DIR / "config.json"
 DEPS_STAMP_FILE = STATE_DIR / ".deps_installed"
 
@@ -96,7 +96,7 @@ def command_migrate(path_str: str) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Manage knowledge-base skill configuration.")
+    parser = argparse.ArgumentParser(description="Manage local-knowledge-base skill configuration.")
     parser.add_argument("--check", action="store_true", help="Check whether the knowledge base is configured")
     parser.add_argument("--get", action="store_true", help="Get the configured knowledge base path")
     parser.add_argument("--set", metavar="PATH", help="Set the knowledge base path")

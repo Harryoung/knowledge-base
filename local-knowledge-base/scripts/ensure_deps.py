@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install runtime dependencies for the knowledge-base skill on first use."""
+"""Install runtime dependencies for the local-knowledge-base skill on first use."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parent.parent
-STATE_DIR = Path.home() / ".knowledge-base-skill"
+STATE_DIR = Path.home() / ".local-knowledge-base"
 STAMP_FILE = STATE_DIR / ".deps_installed"
 REQUIREMENTS_FILE = SKILL_ROOT / "requirements.txt"
 

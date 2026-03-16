@@ -22,7 +22,7 @@ Run:
 
 ```bash
 python -m unittest discover -s tests -v
-python -m py_compile scripts/*.py tests/*.py
+python -m py_compile local-knowledge-base/scripts/*.py tests/*.py
 ```
 
 Check these manually:

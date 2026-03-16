@@ -11,12 +11,13 @@ import openpyxl
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS_DIR = PROJECT_ROOT / "scripts"
+SKILL_ROOT = PROJECT_ROOT / "local-knowledge-base"
+SCRIPTS_DIR = SKILL_ROOT / "scripts"
 
 
 def run_script(script_name: str, *args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     command = [sys.executable, str(SCRIPTS_DIR / script_name), *args]
-    return subprocess.run(command, capture_output=True, text=True, env=env, cwd=PROJECT_ROOT)
+    return subprocess.run(command, capture_output=True, text=True, env=env, cwd=SKILL_ROOT)
 
 
 class KnowledgeBaseCliTests(unittest.TestCase):

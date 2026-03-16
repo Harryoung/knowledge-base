@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smart document to Markdown converter for the knowledge-base skill."""
+"""Smart document to Markdown converter for the local-knowledge-base skill."""
 
 from __future__ import annotations
 

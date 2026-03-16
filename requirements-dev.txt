@@ -1,1 +1,1 @@
--r requirements.txt
+-r local-knowledge-base/requirements.txt
